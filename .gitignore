@@ -6,3 +6,4 @@ node_modules/
 # Model conversion scratch (fp32 download, test images)
 scripts/.cache/
 __pycache__/
+_site/

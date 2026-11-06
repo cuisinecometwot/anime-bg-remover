@@ -1,0 +1,50 @@
+name: Deploy (GitHub Pages)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Test
+        run: npm test
+
+      - name: Fetch ONNX Runtime, coi-serviceworker
+        run: scripts/fetch-vendor.sh
+
+      - name: Collect site files
+        run: |
+          mkdir _site
+          cp -r index.html app.js style.css favicon.svg og.png sitemap.xml \
+            coi-serviceworker.min.js domain models vendor _site/
+          rm _site/domain/*.test.js
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
