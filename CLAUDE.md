@@ -21,5 +21,6 @@ Free online background remover for anime/illustration images that runs entirely 
 - Done: v1 page — transparent PNG + white/color/image background, PNG/JPG download, hold-to-compare, model cached in Cache Storage, WebGPU→CPU fallback.
 - Measured headless Chromium 131 on HD 620, 2456x1736: GPU 2.7s, CPU (wasm) 19.4s; second visit skips the model download. fp16 vs fp32 mask max diff 2.2/255.
 - Done: SEO (Lighthouse SEO/a11y/best-practices 100), sitemap in root robots.txt, cross-links from the upscaler FAQ and the profile homepage.
-- Next: create the public GitHub repo, push, enable Pages (Source: GitHub Actions); test on Windows/Android Chrome.
+- Done: live at https://cuisinecometwot.github.io/anime-bg-remover/ (verified end to end in headless Chromium). First deploys hung in `syncing_files` (GitHub-side); deploy-pages timeout raised to 30 min.
+- Next: test on Windows/Android Chrome; submit sitemap in Google Search Console.
 - Ideas: edge refine/threshold slider, batch + zip, chain with the upscaler.
