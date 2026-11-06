@@ -1,0 +1,9 @@
+{
+  "size": 88070593,
+  "parts": [
+    "isnetis-fp16.onnx.part0",
+    "isnetis-fp16.onnx.part1",
+    "isnetis-fp16.onnx.part2",
+    "isnetis-fp16.onnx.part3"
+  ]
+}
