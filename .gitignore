@@ -1,0 +1,8 @@
+# Fetched by scripts/fetch-vendor.sh
+vendor/
+coi-serviceworker.min.js
+node_modules/
+.env
+# Model conversion scratch (fp32 download, test images)
+scripts/.cache/
+__pycache__/
