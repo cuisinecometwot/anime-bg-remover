@@ -3,9 +3,45 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Anime Background Remover</title>
+    <title>Free Anime Background Remover Online – Transparent PNG, No Upload</title>
+    <meta
+      name="description"
+      content="Free online AI background remover for anime, manga and illustrations. Cut out characters to a transparent PNG or a new background, right in your browser. No sign-up, no watermark, images never uploaded."
+    />
+    <link rel="canonical" href="https://cuisinecometwot.github.io/anime-bg-remover/" />
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <meta name="theme-color" content="#3b6cf6" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Yutoku Tech" />
+    <meta property="og:title" content="Free Anime Background Remover (No Upload)" />
+    <meta
+      property="og:description"
+      content="Remove the background from anime art in your browser. Transparent PNG or a new background. Free, no sign-up, images stay on your device."
+    />
+    <meta property="og:url" content="https://cuisinecometwot.github.io/anime-bg-remover/" />
+    <meta property="og:image" content="https://cuisinecometwot.github.io/anime-bg-remover/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Free Anime Background Remover",
+        "url": "https://cuisinecometwot.github.io/anime-bg-remover/",
+        "description": "Remove backgrounds from anime, manga and illustrations with an AI segmentation model running locally in the browser via WebGPU. Export a transparent PNG or place the character on a new background. Images are never uploaded.",
+        "applicationCategory": "MultimediaApplication",
+        "operatingSystem": "Any (Chrome, Edge or another browser with WebGPU)",
+        "browserRequirements": "Requires JavaScript. WebGPU recommended; falls back to CPU (WebAssembly).",
+        "isAccessibleForFree": true,
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "author": {
+          "@type": "Person",
+          "name": "Huu Duc Nguyen",
+          "url": "https://cuisinecometwot.github.io/"
+        }
+      }
+    </script>
     <!-- Reloads the page once with COOP/COEP headers (GitHub Pages can't send them) so the CPU backend can use threads. -->
     <script src="coi-serviceworker.min.js"></script>
     <link rel="stylesheet" href="style.css" />
@@ -14,10 +50,11 @@
   <body>
     <main>
       <header>
-        <h1>Anime Background Remover <span class="tag">beta</span></h1>
+        <h1>Free Anime Background Remover <span class="tag">beta</span></h1>
         <p class="sub">
-          Cut out characters from anime and illustrations. Runs in your browser: your images never
-          leave this device.
+          Remove the background from anime, manga and illustration images online. Get a transparent
+          PNG or put the character on a new color or picture. It runs in your browser: free, no
+          sign-up, no watermark, and your images never leave this device.
         </p>
       </header>
 
@@ -67,6 +104,53 @@
           <button id="compare" class="secondary">Hold to see original</button>
         </div>
         <div class="stage"><canvas id="preview" aria-label="Result preview"></canvas></div>
+      </section>
+
+      <section class="card info" aria-labelledby="howto-title">
+        <h2 id="howto-title">How to remove the background from an anime image</h2>
+        <ol>
+          <li>Drop, paste or choose a PNG, JPG or WebP image. The AI cuts out the character.</li>
+          <li>
+            Keep it <strong>Transparent</strong>, or pick <strong>White</strong>, a
+            <strong>Color</strong> or your own background <strong>Image</strong>.
+          </li>
+          <li>Click <strong>Download</strong> to save a PNG (or JPG with a background).</li>
+        </ol>
+      </section>
+
+      <section class="card info" aria-labelledby="faq-title">
+        <h2 id="faq-title">FAQ</h2>
+        <h3>Is this background remover really free?</h3>
+        <p>Yes. There is no account, no limit on the number of images and no watermark.</p>
+        <h3>Are my images uploaded to a server?</h3>
+        <p>
+          No. The AI model is downloaded once (about 88 MB, then cached by your browser) and runs on
+          your own GPU through WebGPU, or on the CPU if WebGPU is not available. Images never leave
+          your device.
+        </p>
+        <h3>What kind of images work best?</h3>
+        <p>
+          Anime, manga, illustrations, game art and other drawn characters. It uses an anime
+          segmentation model (ISNet trained by SkyTNT), so it handles hair, outlines and stylized
+          shading better than photo-trained removers. Real photos are not its strength.
+        </p>
+        <h3>Does it keep the original resolution?</h3>
+        <p>
+          Yes. The download has the same size as your image, up to about 40 megapixels (for example
+          8000×5000). The preview on this page is scaled down.
+        </p>
+        <h3>Which browsers are supported?</h3>
+        <p>
+          Recent Chrome and Edge on Windows, macOS, Linux and Android use the GPU and take a few
+          seconds per image. Browsers without WebGPU fall back to CPU mode, which takes around 20
+          seconds or more.
+        </p>
+        <h3>Can I make the image bigger too?</h3>
+        <p>
+          Yes. Use the free
+          <a href="https://cuisinecometwot.github.io/image-upscaler/">AI image upscaler</a> to
+          enlarge anime art 2x or 4x, also in your browser.
+        </p>
       </section>
 
       <details class="card env">
