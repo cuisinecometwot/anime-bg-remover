@@ -4,9 +4,12 @@ import { MODEL_SIZE, planLetterbox, rgbaToChw } from "./domain/letterbox.js";
 import { applyAlpha, maskToAlpha } from "./domain/mask.js";
 import { encodePng } from "./domain/png.js";
 
-const MODEL_URL = new URL("./models/isnetis-fp16.onnx", import.meta.url).href;
+// The model is split into ~21 MB parts: GitHub Pages deploys stalled on the single 84 MiB file.
+const MODEL_MANIFEST = new URL("./models/isnetis-fp16.json", import.meta.url).href;
 // Bump when the model file changes so the Cache Storage copy is replaced.
 const MODEL_CACHE = "anime-bg-model-v1";
+// Cache Storage key for the joined model bytes.
+const MODEL_KEY = new URL("./models/isnetis-fp16.onnx", import.meta.url).href;
 // Full-size download keeps ~5 RGBA-sized buffers alive at once.
 const MAX_INPUT_PIXELS = 40e6;
 const PREVIEW_MAX_EDGE = 1200;
@@ -92,31 +95,33 @@ async function detectEnv() {
 async function fetchModel(onProgress) {
   if (state.modelBytes) return state.modelBytes;
   const cache = self.caches ? await caches.open(MODEL_CACHE).catch(() => null) : null;
-  let res = cache && (await cache.match(MODEL_URL));
-  if (!res) {
-    res = await fetch(MODEL_URL);
+  const cached = cache && (await cache.match(MODEL_KEY));
+  if (cached) {
+    state.modelBytes = new Uint8Array(await cached.arrayBuffer());
+    return state.modelBytes;
+  }
+  const manifest = await (await fetch(MODEL_MANIFEST)).json();
+  const bytes = new Uint8Array(manifest.size);
+  let got = 0;
+  for (const part of manifest.parts) {
+    const res = await fetch(new URL(part, MODEL_MANIFEST));
     if (!res.ok) throw new Error(`model download failed (HTTP ${res.status})`);
-    const total = Number(res.headers.get("content-length")) || 88e6;
-    const chunks = [];
-    let got = 0;
     const reader = res.body.getReader();
     for (;;) {
       const { done, value } = await reader.read();
       if (done) break;
-      chunks.push(value);
+      bytes.set(value, got);
       got += value.length;
       onProgress(
-        Math.min(got / total, 1),
-        `Downloading AI model (first time only)… ${(got / 1e6).toFixed(0)} / ${(total / 1e6).toFixed(0)} MB`,
+        got / manifest.size,
+        `Downloading AI model (first time only)… ${(got / 1e6).toFixed(0)} / ${(manifest.size / 1e6).toFixed(0)} MB`,
       );
     }
-    const blob = new Blob(chunks);
-    if (cache) await cache.put(MODEL_URL, new Response(blob)).catch(() => {});
-    state.modelBytes = new Uint8Array(await blob.arrayBuffer());
-  } else {
-    state.modelBytes = new Uint8Array(await res.arrayBuffer());
   }
-  return state.modelBytes;
+  if (got !== manifest.size) throw new Error("model download incomplete");
+  if (cache) await cache.put(MODEL_KEY, new Response(bytes)).catch(() => {});
+  state.modelBytes = bytes;
+  return bytes;
 }
 
 async function getSession(backend, onProgress) {

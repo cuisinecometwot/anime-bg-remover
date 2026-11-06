@@ -15,7 +15,9 @@ ROOT = Path(__file__).resolve().parent.parent
 CACHE = ROOT / "scripts" / ".cache"
 SRC_URL = "https://huggingface.co/skytnt/anime-seg/resolve/main/isnetis.onnx"
 SRC = CACHE / "isnetis.onnx"
-DST = ROOT / "models" / "isnetis-fp16.onnx"
+DST = CACHE / "isnetis-fp16.onnx"
+MODELS = ROOT / "models"
+PART_SIZE = 21 * 1024 * 1024  # small enough for GitHub Pages deploys and git pushes
 SIZE = 1024
 
 
@@ -39,10 +41,29 @@ def convert():
     DST.parent.mkdir(parents=True, exist_ok=True)
     onnx.save(half, DST)
     print(f"wrote {DST} ({DST.stat().st_size / 1e6:.1f} MB)")
+    split()
     for t in half.graph.input:
         print("input ", t.name, [d.dim_value or d.dim_param for d in t.type.tensor_type.shape.dim])
     for t in half.graph.output:
         print("output", t.name, [d.dim_value or d.dim_param for d in t.type.tensor_type.shape.dim])
+
+
+def split():
+    """Write models/isnetis-fp16.onnx.partN + a manifest; app.js joins them."""
+    import json
+
+    data = DST.read_bytes()
+    MODELS.mkdir(exist_ok=True)
+    for old in MODELS.glob("isnetis-fp16.onnx.part*"):
+        old.unlink()
+    parts = []
+    for i, off in enumerate(range(0, len(data), PART_SIZE)):
+        name = f"isnetis-fp16.onnx.part{i}"
+        (MODELS / name).write_bytes(data[off : off + PART_SIZE])
+        parts.append(name)
+    manifest = {"size": len(data), "parts": parts}
+    (MODELS / "isnetis-fp16.json").write_text(json.dumps(manifest, indent=2) + "\n")
+    print(f"split into {len(parts)} parts")
 
 
 def letterbox(path):
@@ -83,6 +104,8 @@ def main():
     download()
     if not DST.exists():
         convert()
+    elif not (MODELS / "isnetis-fp16.json").exists():
+        split()
     if args.check:
         check(args.check)
 
