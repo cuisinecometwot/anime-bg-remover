@@ -48,3 +48,6 @@ jobs:
 
       - id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          # Pages can sit in syncing_files longer than the 10 min default, mostly for the 88 MB model.
+          timeout: 1800000
