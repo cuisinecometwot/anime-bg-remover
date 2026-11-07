@@ -1,6 +1,6 @@
 # Free Anime Background Remover
 
-Remove the background from anime, manga and illustration images in your browser. Get a transparent PNG or swap in a solid color or another image. Nothing is uploaded: the AI model runs on your GPU (WebGPU) or CPU.
+Remove the background from anime, manga and illustration images in your browser. Fix mistakes with a brush or magic wand, then get a transparent PNG or swap in a solid color or another image. Nothing is uploaded: the AI model runs on your GPU (WebGPU) or CPU.
 
 Live: https://cuisinecometwot.github.io/anime-bg-remover/
 
