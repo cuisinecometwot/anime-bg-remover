@@ -36,7 +36,7 @@ jobs:
       - name: Collect site files
         run: |
           mkdir _site
-          cp -r index.html app.js style.css favicon.svg og.png sitemap.xml \
+          cp -r index.html app.js editor.js style.css favicon.svg og.png sitemap.xml \
             coi-serviceworker.min.js domain models vendor _site/
           rm _site/domain/*.test.js
 

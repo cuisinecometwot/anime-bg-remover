@@ -12,7 +12,7 @@ Free online background remover for anime/illustration images that runs entirely 
 - SEO like the upscaler: keyword title/description, canonical, OG image, JSON-LD WebApplication, how-to + FAQ, sitemap listed in the root robots.txt of the cuisinecometwot.github.io repo.
 
 ## Stack & architecture
-- Deploy: `.github/workflows/pages.yml` copies only site files into `_site` (no scripts/tests/docs).
+- Deploy: `.github/workflows/pages.yml` copies an explicit list of site files into `_site` (no scripts/tests/docs) — add new top-level files there.
 - Static site at the repo root, vanilla ES modules, no build step. ONNX Runtime Web (WebGPU build, also does wasm) + coi-serviceworker, fetched into gitignored `vendor/` by `scripts/fetch-vendor.sh`.
 - Model: skytnt `anime-seg` `isnetis.onnx` (ISNet, Apache-2.0), converted to fp16 weights with fp32 I/O by `scripts/convert_fp16.py` and committed as 4 × 21 MB parts + `models/isnetis-fp16.json` manifest (88 MB total), joined in JS. The single 84 MiB file made GitHub Pages deploys hang at `syncing_files`. Input 1×3×1024×1024 RGB/255 letterboxed; output 1×1×1024×1024 mask.
 - `domain/` (pure JS, `node --test`): letterbox planning, mask resize/apply, background compositing, streaming PNG encoder (copied from image-upscaler).
