@@ -1,8 +1,9 @@
 import * as ort from "./vendor/ort.webgpu.min.mjs";
 import { compositeOver, coverRect, parseHex } from "./domain/composite.js";
 import { MODEL_SIZE, planLetterbox, rgbaToChw } from "./domain/letterbox.js";
-import { applyAlpha, maskToAlpha } from "./domain/mask.js";
+import { applyAlpha, maskToAlpha, resizeMask } from "./domain/mask.js";
 import { encodePng } from "./domain/png.js";
+import { createEditor } from "./editor.js";
 
 // The model is split into ~21 MB parts: GitHub Pages deploys stalled on the single 84 MiB file.
 const MODEL_MANIFEST = new URL("./models/isnetis-fp16.json", import.meta.url).href;
@@ -12,7 +13,8 @@ const MODEL_CACHE = "anime-bg-model-v1";
 const MODEL_KEY = new URL("./models/isnetis-fp16.onnx", import.meta.url).href;
 // Full-size download keeps ~5 RGBA-sized buffers alive at once.
 const MAX_INPUT_PIXELS = 40e6;
-const PREVIEW_MAX_EDGE = 1200;
+// Preview and manual edits use this resolution; the download upsamples the edited mask.
+const PREVIEW_MAX_EDGE = 1600;
 
 ort.env.wasm.wasmPaths = new URL("./vendor/", import.meta.url).href;
 ort.env.wasm.numThreads = self.crossOriginIsolated
@@ -39,6 +41,24 @@ const ui = {
   preview: $("preview"),
 };
 
+const editor = createEditor({
+  stage: $("stage"),
+  zoom: $("zoom"),
+  canvas: $("preview"),
+  cursor: $("cursor"),
+  fit: $("fit"),
+  toolButtons: [...document.querySelectorAll("#toolbar .tool")],
+  modeButtons: [...document.querySelectorAll("#toolbar .mode")],
+  size: $("brush-size"),
+  sizeWrap: $("size-wrap"),
+  tol: $("wand-tol"),
+  tolWrap: $("tol-wrap"),
+  undo: $("undo"),
+  redo: $("redo"),
+  reset: $("reset"),
+  overlay: $("overlay"),
+});
+
 const state = {
   env: {},
   modelBytes: null,
@@ -46,8 +66,6 @@ const state = {
   busy: false,
   // Current image: decoded bitmap, letterbox plan and the model's mask.
   image: null,
-  // Preview-sized buffers so background changes redraw instantly.
-  preview: null,
   bgImage: null,
 };
 
@@ -182,23 +200,16 @@ function bgMode() {
 
 // ---------- preview ----------
 
-function buildPreview() {
+function loadEditor() {
   const { bitmap, mask, plan } = state.image;
   const { w, h } = fitSize(bitmap.width, bitmap.height, PREVIEW_MAX_EDGE);
-  const original = readPixels(bitmap, w, h);
-  const cutout = applyAlpha(original, maskToAlpha(mask, plan, w, h));
-  state.preview = { w, h, original, cutout };
+  editor.load(readPixels(bitmap, w, h), maskToAlpha(mask, plan, w, h), w, h);
+  refreshBackground();
 }
 
-function drawPreview(showOriginal = false) {
-  const p = state.preview;
-  if (!p) return;
-  const bg = background(p.w, p.h);
-  const px = showOriginal ? p.original : bg ? compositeOver(p.cutout, bg) : p.cutout;
-  ui.preview.width = p.w;
-  ui.preview.height = p.h;
-  ui.preview.getContext("2d").putImageData(new ImageData(px, p.w, p.h), 0, 0);
-  ui.preview.classList.toggle("checker", !bg || showOriginal);
+function refreshBackground() {
+  const { w, h } = editor.size;
+  if (w) editor.setBackground(background(w, h));
 }
 
 // ---------- pipeline ----------
@@ -256,10 +267,9 @@ async function removeBackground(file) {
 
     state.image?.bitmap.close();
     state.image = { bitmap, plan, mask, name: file.name.replace(/\.[^.]+$/, "") || "image" };
-    buildPreview();
-    drawPreview();
     ui.resultCard.hidden = false;
-    ui.status.textContent = `Done in ${secs.toFixed(1)}s. Pick a background or download.`;
+    loadEditor();
+    ui.status.textContent = `Done in ${secs.toFixed(1)}s. Fix any mistakes with Brush or Magic wand, then download.`;
   } catch (e) {
     console.error(e);
     ui.status.textContent = `Error: ${e.message}`;
@@ -276,10 +286,12 @@ async function download() {
   ui.download.disabled = true;
   ui.status.textContent = "Preparing full-size image…";
   try {
-    const { bitmap, mask, plan } = img;
+    const { bitmap } = img;
     const W = bitmap.width;
     const H = bitmap.height;
-    let cutout = applyAlpha(readPixels(bitmap, W, H), maskToAlpha(mask, plan, W, H));
+    const { w, h } = editor.size;
+    const alpha = resizeMask(editor.mask, w, { x: 0, y: 0, w, h }, W, H);
+    let cutout = applyAlpha(readPixels(bitmap, W, H), alpha);
     const bg = background(W, H);
     if (bg) cutout = compositeOver(cutout, bg);
     const jpg = bg && ui.format.value === "image/jpeg";
@@ -385,12 +397,12 @@ ui.bg.addEventListener("change", (e) => {
   if (e.target === ui.bgFile) return;
   if (bgMode() === "image" && !state.bgImage) ui.bgFile.click();
   syncFormat();
-  drawPreview();
+  refreshBackground();
 });
 ui.bgColor.addEventListener("input", () => {
   ui.bg.querySelector("input[value=color]").checked = true;
   syncFormat();
-  drawPreview();
+  refreshBackground();
 });
 ui.bgFile.addEventListener("change", async () => {
   const f = ui.bgFile.files[0];
@@ -400,7 +412,7 @@ ui.bgFile.addEventListener("change", async () => {
     state.bgImage = await createImageBitmap(f);
     ui.bg.querySelector("input[value=image]").checked = true;
     syncFormat();
-    drawPreview();
+    refreshBackground();
   } catch {
     ui.status.textContent = `Can't read background image: ${f.name}`;
   }
@@ -413,10 +425,10 @@ for (const [ev, show] of [
   ["pointerleave", false],
   ["pointercancel", false],
 ]) {
-  ui.compare.addEventListener(ev, () => drawPreview(show));
+  ui.compare.addEventListener(ev, () => editor.showOriginal(show));
 }
-ui.compare.addEventListener("keydown", (e) => e.key === " " && drawPreview(true));
-ui.compare.addEventListener("keyup", (e) => e.key === " " && drawPreview(false));
+ui.compare.addEventListener("keydown", (e) => e.key === " " && editor.showOriginal(true));
+ui.compare.addEventListener("keyup", (e) => e.key === " " && editor.showOriginal(false));
 
 syncFormat();
 detectEnv();

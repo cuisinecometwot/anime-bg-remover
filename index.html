@@ -29,7 +29,7 @@
         "@type": "WebApplication",
         "name": "Free Anime Background Remover",
         "url": "https://cuisinecometwot.github.io/anime-bg-remover/",
-        "description": "Remove backgrounds from anime, manga and illustrations with an AI segmentation model running locally in the browser via WebGPU. Export a transparent PNG or place the character on a new background. Images are never uploaded.",
+        "description": "Remove backgrounds from anime, manga and illustrations with an AI segmentation model running locally in the browser via WebGPU. Fix mistakes with a brush or magic wand, then export a transparent PNG or place the character on a new background. Images are never uploaded.",
         "applicationCategory": "MultimediaApplication",
         "operatingSystem": "Any (Chrome, Edge or another browser with WebGPU)",
         "browserRequirements": "Requires JavaScript. WebGPU recommended; falls back to CPU (WebAssembly).",
@@ -103,13 +103,55 @@
           <button id="download">Download</button>
           <button id="compare" class="secondary">Hold to see original</button>
         </div>
-        <div class="stage"><canvas id="preview" aria-label="Result preview"></canvas></div>
+        <div id="toolbar" class="toolbar" role="toolbar" aria-label="Fix the cutout">
+          <div class="seg" role="group" aria-label="Tool">
+            <button class="tool" data-tool="brush" title="Brush (B)">Brush</button>
+            <button class="tool" data-tool="wand" title="Magic wand: click an area (W)">
+              Magic wand
+            </button>
+          </div>
+          <div class="seg" role="group" aria-label="Mode">
+            <button class="mode keep" data-mode="keep" title="Restore areas (X to swap)">
+              Keep
+            </button>
+            <button class="mode remove" data-mode="remove" title="Remove areas (X to swap)">
+              Remove
+            </button>
+          </div>
+          <label id="size-wrap" class="slider"
+            >Size <input id="brush-size" type="range" min="4" max="160" value="30"
+          /></label>
+          <label id="tol-wrap" class="slider" hidden
+            >Tolerance <input id="wand-tol" type="range" min="1" max="100" value="28"
+          /></label>
+          <button id="undo" class="secondary" title="Undo (Ctrl+Z)">Undo</button>
+          <button id="redo" class="secondary" title="Redo (Ctrl+Shift+Z)">Redo</button>
+          <button id="reset" class="secondary" title="Back to the automatic result">Reset</button>
+          <label class="check"
+            ><input id="overlay" type="checkbox" /> Show removed areas in red</label
+          >
+        </div>
+        <div id="stage" class="stage">
+          <div id="zoom" class="zoom">
+            <canvas id="preview" aria-label="Result preview, editable"></canvas>
+          </div>
+          <div id="cursor" class="cursor" hidden></div>
+          <button id="fit" class="secondary fit" hidden>Fit</button>
+        </div>
+        <p class="hint">
+          Drag to paint · Magic wand: click an area · Scroll or pinch to zoom · Space+drag,
+          right-drag or two fingers to pan
+        </p>
       </section>
 
       <section class="card info" aria-labelledby="howto-title">
         <h2 id="howto-title">How to remove the background from an anime image</h2>
         <ol>
           <li>Drop, paste or choose a PNG, JPG or WebP image. The AI cuts out the character.</li>
+          <li>
+            Fix any mistakes: choose <strong>Keep</strong> or <strong>Remove</strong>, then paint
+            with the <strong>Brush</strong> or click an area with the <strong>Magic wand</strong>.
+          </li>
           <li>
             Keep it <strong>Transparent</strong>, or pick <strong>White</strong>, a
             <strong>Color</strong> or your own background <strong>Image</strong>.
@@ -134,10 +176,19 @@
           segmentation model (ISNet trained by SkyTNT), so it handles hair, outlines and stylized
           shading better than photo-trained removers. Real photos are not its strength.
         </p>
+        <h3>What if it removes the wrong part, or misses some background?</h3>
+        <p>
+          Fix it on the preview. Pick <strong>Keep</strong> to bring parts back or
+          <strong>Remove</strong> to erase them, then paint with the <strong>Brush</strong>, or
+          click once with the <strong>Magic wand</strong> to select a whole area of similar color
+          (raise <em>Tolerance</em> to grab more). Turn on "Show removed areas in red" to see
+          exactly what is cut. Zoom with the mouse wheel or by pinching, and undo with Ctrl+Z.
+        </p>
         <h3>Does it keep the original resolution?</h3>
         <p>
           Yes. The download has the same size as your image, up to about 40 megapixels (for example
-          8000×5000). The preview on this page is scaled down.
+          8000×5000). The preview on this page is scaled down, and manual fixes are scaled up to
+          match.
         </p>
         <h3>Which browsers are supported?</h3>
         <p>
