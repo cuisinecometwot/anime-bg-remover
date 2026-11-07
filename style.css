@@ -217,17 +217,104 @@ select:disabled {
   gap: 8px;
   margin-bottom: 12px;
 }
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+}
+.seg {
+  display: inline-flex;
+}
+.seg button {
+  background: var(--card);
+  color: inherit;
+  border-color: var(--line);
+  border-radius: 0;
+}
+.seg button:first-child {
+  border-radius: 8px 0 0 8px;
+}
+.seg button:last-child {
+  border-radius: 0 8px 8px 0;
+  margin-left: -1px;
+}
+.seg button[aria-pressed="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.seg .remove[aria-pressed="true"] {
+  background: #d9534f;
+  border-color: #d9534f;
+}
+.slider,
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+}
+.slider input {
+  width: 110px;
+}
+.slider[hidden] {
+  display: none;
+}
+.hint {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-align: center;
+}
 .stage {
+  position: relative;
   display: grid;
   place-items: center;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  border-radius: 8px;
+  background: var(--bg);
+  cursor: crosshair;
+}
+.stage[data-tool="brush"] {
+  cursor: none;
+}
+.stage.panning,
+.stage.panning * {
+  cursor: grab;
+}
+.zoom {
+  transform-origin: 0 0;
+  line-height: 0;
 }
 #preview {
   max-width: 100%;
-  max-height: 75vh;
+  max-height: 70vh;
   border-radius: 8px;
 }
+.cursor {
+  position: absolute;
+  left: 0;
+  top: 0;
+  border: 1.5px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px #000;
+  pointer-events: none;
+}
+.fit {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  cursor: pointer;
+}
 #preview.checker {
-  background: repeating-conic-gradient(#ccc 0 25%, #fff 0 50%) 0 0 / 20px 20px;
+  /* --checker is set by the editor so squares keep their on-screen size when zoomed. */
+  background: repeating-conic-gradient(#ccc 0 25%, #fff 0 50%) 0 0 / var(--checker, 20px)
+    var(--checker, 20px);
 }
 #compare {
   user-select: none;

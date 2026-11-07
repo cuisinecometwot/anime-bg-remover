@@ -103,7 +103,45 @@
           <button id="download">Download</button>
           <button id="compare" class="secondary">Hold to see original</button>
         </div>
-        <div class="stage"><canvas id="preview" aria-label="Result preview"></canvas></div>
+        <div id="toolbar" class="toolbar" role="toolbar" aria-label="Fix the cutout">
+          <div class="seg" role="group" aria-label="Tool">
+            <button class="tool" data-tool="brush" title="Brush (B)">Brush</button>
+            <button class="tool" data-tool="wand" title="Magic wand: click an area (W)">
+              Magic wand
+            </button>
+          </div>
+          <div class="seg" role="group" aria-label="Mode">
+            <button class="mode keep" data-mode="keep" title="Restore areas (X to swap)">
+              Keep
+            </button>
+            <button class="mode remove" data-mode="remove" title="Remove areas (X to swap)">
+              Remove
+            </button>
+          </div>
+          <label id="size-wrap" class="slider"
+            >Size <input id="brush-size" type="range" min="4" max="160" value="30"
+          /></label>
+          <label id="tol-wrap" class="slider" hidden
+            >Tolerance <input id="wand-tol" type="range" min="1" max="100" value="28"
+          /></label>
+          <button id="undo" class="secondary" title="Undo (Ctrl+Z)">Undo</button>
+          <button id="redo" class="secondary" title="Redo (Ctrl+Shift+Z)">Redo</button>
+          <button id="reset" class="secondary" title="Back to the automatic result">Reset</button>
+          <label class="check"
+            ><input id="overlay" type="checkbox" /> Show removed areas in red</label
+          >
+        </div>
+        <div id="stage" class="stage">
+          <div id="zoom" class="zoom">
+            <canvas id="preview" aria-label="Result preview, editable"></canvas>
+          </div>
+          <div id="cursor" class="cursor" hidden></div>
+          <button id="fit" class="secondary fit" hidden>Fit</button>
+        </div>
+        <p class="hint">
+          Drag to paint · Magic wand: click an area · Scroll or pinch to zoom · Space+drag,
+          right-drag or two fingers to pan
+        </p>
       </section>
 
       <section class="card info" aria-labelledby="howto-title">

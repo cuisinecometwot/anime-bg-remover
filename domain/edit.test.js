@@ -151,3 +151,14 @@ test("renderPreview: result, background and overlay views", () => {
   renderPreview(out, original, mask, 2, { x: 1, y: 0, w: 1, h: 1 });
   assert.deepEqual([...out.subarray(0, 4)], [7, 7, 7, 7]);
 });
+
+test("History.revert restores the last push without adding a redo step", () => {
+  const mask = new Uint8ClampedArray([5]);
+  const hist = new History();
+  hist.push(mask);
+  mask[0] = 99;
+  hist.revert(mask);
+  assert.equal(mask[0], 5);
+  assert.equal(hist.canUndo, false);
+  assert.equal(hist.canRedo, false);
+});

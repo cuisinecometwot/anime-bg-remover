@@ -148,6 +148,10 @@ export class History {
   discard() {
     this.undoStack.pop();
   }
+  // Restores the last push and forgets it (an edit cancelled midway, e.g. by a pinch).
+  revert(mask) {
+    if (this.canUndo) mask.set(this.undoStack.pop());
+  }
   get canUndo() {
     return this.undoStack.length > 0;
   }
