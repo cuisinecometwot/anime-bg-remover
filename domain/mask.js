@@ -1,9 +1,9 @@
-// Turns the model's square mask back into an alpha channel at any output size.
+// Resamples masks to any output size and applies them as alpha.
 
-// mask: Float32Array size*size in [0, 1]; plan: from planLetterbox.
-// Returns Uint8ClampedArray outW*outH, bilinear-sampled from the image's part of the mask.
-export function maskToAlpha(mask, plan, outW, outH) {
-  const { size, w, h, x: ox, y: oy } = plan;
+// Bilinear resize of the crop {x, y, w, h} of a mask whose rows are `stride` values apart.
+// `scale` maps source values to 0..255 (255 for the model's [0, 1] floats, 1 for bytes).
+export function resizeMask(src, stride, crop, outW, outH, scale = 1) {
+  const { x: ox, y: oy, w, h } = crop;
   const alpha = new Uint8ClampedArray(outW * outH);
   const sx = w / outW;
   const sy = h / outH;
@@ -19,17 +19,23 @@ export function maskToAlpha(mask, plan, outW, outH) {
   }
   for (let j = 0; j < outH; j++) {
     const y = Math.min(Math.max((j + 0.5) * sy - 0.5, 0), h - 1);
-    const r0 = (oy + Math.floor(y)) * size;
-    const r1 = (oy + Math.min(Math.floor(y) + 1, h - 1)) * size;
+    const r0 = (oy + Math.floor(y)) * stride;
+    const r1 = (oy + Math.min(Math.floor(y) + 1, h - 1)) * stride;
     const fy = y - Math.floor(y);
     const row = j * outW;
     for (let i = 0; i < outW; i++) {
-      const top = mask[r0 + x0[i]] * (1 - fx[i]) + mask[r0 + x1[i]] * fx[i];
-      const bot = mask[r1 + x0[i]] * (1 - fx[i]) + mask[r1 + x1[i]] * fx[i];
-      alpha[row + i] = (top * (1 - fy) + bot * fy) * 255;
+      const top = src[r0 + x0[i]] * (1 - fx[i]) + src[r0 + x1[i]] * fx[i];
+      const bot = src[r1 + x0[i]] * (1 - fx[i]) + src[r1 + x1[i]] * fx[i];
+      alpha[row + i] = (top * (1 - fy) + bot * fy) * scale;
     }
   }
   return alpha;
+}
+
+// mask: the model's Float32Array size*size in [0, 1]; plan: from planLetterbox.
+// Returns 0..255 alpha for the image's part of the mask at outW×outH.
+export function maskToAlpha(mask, plan, outW, outH) {
+  return resizeMask(mask, plan.size, plan, outW, outH, 255);
 }
 
 // New RGBA with alpha = original alpha × mask, so already-transparent areas stay transparent.

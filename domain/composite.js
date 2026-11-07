@@ -30,3 +30,38 @@ export function compositeOver(fg, bg) {
   }
   return out;
 }
+
+const OVERLAY = [255, 40, 60];
+const OVERLAY_STRENGTH = 0.55;
+
+// Redraws rect {x, y, w, h} of the w-wide preview buffer `out` from the original pixels and
+// the 0..255 mask. "result" shows the cut-out (transparent, or over bg colour/buffer);
+// "overlay" shows the original with removed areas tinted red, so they can be restored.
+export function renderPreview(out, original, mask, w, rect, { view = "result", bg = null } = {}) {
+  const solid = bg && bg.length === 3;
+  for (let y = rect.y; y < rect.y + rect.h; y++) {
+    for (let x = rect.x; x < rect.x + rect.w; x++) {
+      const i = y * w + x;
+      const p = i * 4;
+      if (view === "overlay") {
+        const t = (1 - mask[i] / 255) * OVERLAY_STRENGTH;
+        for (let c = 0; c < 3; c++) out[p + c] = original[p + c] * (1 - t) + OVERLAY[c] * t;
+        out[p + 3] = 255;
+        continue;
+      }
+      const a = (original[p + 3] * mask[i]) / 255;
+      if (!bg) {
+        out[p] = original[p];
+        out[p + 1] = original[p + 1];
+        out[p + 2] = original[p + 2];
+        out[p + 3] = a;
+        continue;
+      }
+      const f = a / 255;
+      for (let c = 0; c < 3; c++) {
+        out[p + c] = original[p + c] * f + (solid ? bg[c] : bg[p + c]) * (1 - f);
+      }
+      out[p + 3] = 255;
+    }
+  }
+}
